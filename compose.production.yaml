@@ -1,0 +1,102 @@
+name: anvil-production
+
+services:
+  mysql:
+    image: mysql:8.4.5@sha256:679e7e924f38a3cbb62a3d7df32924b83f7321a602d3f9f967c01b3df18495d6
+    command: --innodb-buffer-pool-size=1G --innodb-log-buffer-size=500M --innodb-change-buffer-max-size=50 --innodb-flush-log-at-trx_commit=0 --innodb-flush-method=O_DIRECT
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD is required}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-ghost_dev}
+      MYSQL_USER: ${MYSQL_USER:-ghost}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD is required}
+    volumes:
+      - mysql-production-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysql", "-h", "127.0.0.1", "-uroot", "-p${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD is required}", "-e", "SELECT 1"]
+      interval: 5s
+      retries: 60
+      timeout: 5s
+      start_period: 20s
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.0@sha256:352c1fdadc91926edda08f45aeb3f27f37194c2f14101229c0523a11195c96e3
+    volumes:
+      - redis-production-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 5s
+      retries: 60
+    restart: unless-stopped
+
+  ghost:
+    build:
+      context: .
+      dockerfile: docker/ghost-production/Dockerfile
+      args:
+        NODE_VERSION: ${NODE_VERSION:-22.18.0}
+        GHOST_BUILD_VERSION: ${GHOST_BUILD_VERSION:-}
+    environment:
+      NODE_ENV: production
+      url: ${GHOST_URL:-https://anvil.metacognix.xyz}
+      server__host: 0.0.0.0
+      server__port: 2368
+      database__client: mysql
+      database__connection__host: mysql
+      database__connection__user: ${MYSQL_USER:-ghost}
+      database__connection__password: ${MYSQL_PASSWORD:?MYSQL_PASSWORD is required}
+      database__connection__database: ${MYSQL_DATABASE:-ghost_dev}
+      mail__transport: ${MAIL_TRANSPORT:-SMTP}
+      mail__from: ${MAIL_FROM:-xcognix <noreply@mail.metacognix.xyz>}
+      mail__options__host: ${MAIL_HOST:-}
+      mail__options__port: ${MAIL_PORT:-587}
+      mail__options__auth__user: ${MAIL_USER:-}
+      mail__options__auth__pass: ${MAIL_PASSWORD:-}
+    volumes:
+      - ghost-production-data:/home/ghost/content/data
+      - ghost-production-images:/home/ghost/content/images
+      - ghost-production-media:/home/ghost/content/media
+      - ghost-production-files:/home/ghost/content/files
+      - ghost-production-logs:/home/ghost/content/logs
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:2368/ghost/api/admin/site/',{redirect:'manual'}).then(r=>process.exit(r.status<500?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    restart: unless-stopped
+
+  gateway:
+    image: caddy:2-alpine@sha256:86deaf5e3d3408a6ccec08fbb79989783dd26e206ae10bcf78a801dc8c9ab794
+    ports:
+      - "${GATEWAY_HTTP_PORT:-2368}:80"
+    environment:
+      GHOST_BACKEND: ghost:2368
+      ANALYTICS_PROXY_TARGET: ghost:2368
+    volumes:
+      - ./docker/dev-gateway/Caddyfile.build:/etc/caddy/Caddyfile:ro
+    depends_on:
+      ghost:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  mysql-production-data:
+    name: ${MYSQL_VOLUME_NAME:-anvil_mysql-data}
+  redis-production-data:
+    name: ${REDIS_VOLUME_NAME:-anvil_redis-data}
+  ghost-production-data:
+    name: ${GHOST_DATA_VOLUME_NAME:-anvil_ghost-production-data}
+  ghost-production-images:
+    name: ${GHOST_IMAGES_VOLUME_NAME:-anvil_ghost-production-images}
+  ghost-production-media:
+    name: ${GHOST_MEDIA_VOLUME_NAME:-anvil_ghost-production-media}
+  ghost-production-files:
+    name: ${GHOST_FILES_VOLUME_NAME:-anvil_ghost-production-files}
+  ghost-production-logs:
+    name: ${GHOST_LOGS_VOLUME_NAME:-anvil_ghost-production-logs}

@@ -6,7 +6,6 @@
 services:
   analytics:
     image: ghost/traffic-analytics:1.0.233@sha256:94ceb3ab54b3143ba6b5312120e2e0f7422013495ada1da136d554f12921e9df
-    container_name: ghost-dev-analytics
     platform: linux/amd64
     command: ["node", "--enable-source-maps", "dist/server.js"]
     entrypoint: ["/app/entrypoint.sh"]
@@ -30,7 +29,6 @@ services:
 
   tinybird-local:
     image: tinybirdco/tinybird-local:latest@sha256:2f8317aceba18ce20dc4105b0b712b2701bb477a4d9a25477e2aa72bdf9d1423
-    container_name: ghost-dev-tinybird
     platform: linux/amd64
     stop_grace_period: 2s
     ports:
@@ -45,7 +43,6 @@ services:
     build:
       context: ./
       dockerfile: docker/tb-cli/Dockerfile
-    container_name: ghost-dev-tb-cli
     working_dir: /home/tinybird
     environment:
       - TB_HOST=http://tinybird-local:7181
