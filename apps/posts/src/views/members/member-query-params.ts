@@ -2,11 +2,9 @@ import moment from 'moment-timezone';
 import {memberFields} from './member-fields';
 import {resolveField} from '../filters/resolve-field';
 import type {FilterPredicate} from '../filters/filter-types';
-import type {Member, MemberSubscription} from '@tryghost/admin-x-framework/api/members';
+import type {Member} from '@tryghost/admin-x-framework/api/members';
 
 const MAX_ACTIVE_COLUMNS = 2;
-
-const ACTIVE_SUBSCRIPTION_STATUSES = new Set(['active', 'trialing', 'unpaid', 'past_due']);
 
 export type ActiveColumn = {
     key: string;
@@ -89,49 +87,6 @@ export function buildMemberOperationParams({nql, search}: BuildMemberOperationPa
     };
 }
 
-export function mostRelevantSubscription(
-    subscriptions: MemberSubscription[] | undefined
-): MemberSubscription | null {
-    if (!subscriptions?.length) {
-        return null;
-    }
-
-    const withId = subscriptions.filter(s => s.id);
-
-    if (!withId.length) {
-        return null;
-    }
-
-    const sorted = [...withId].sort((a, b) => {
-        const aActive = ACTIVE_SUBSCRIPTION_STATUSES.has(a.status);
-        const bActive = ACTIVE_SUBSCRIPTION_STATUSES.has(b.status);
-
-        if (aActive && !bActive) {
-            return -1;
-        }
-        if (!aActive && bActive) {
-            return 1;
-        }
-
-        const aEnd = new Date(a.current_period_end).getTime();
-        const bEnd = new Date(b.current_period_end).getTime();
-
-        if (Number.isNaN(aEnd) && Number.isNaN(bEnd)) {
-            return 0;
-        }
-        if (Number.isNaN(aEnd)) {
-            return 1;
-        }
-        if (Number.isNaN(bEnd)) {
-            return -1;
-        }
-
-        return bEnd - aEnd;
-    });
-
-    return sorted[0];
-}
-
 function formatDateColumn(date: string | undefined, timezone: string): ColumnValue | null {
     if (!date) {
         return null;
@@ -159,7 +114,7 @@ export function getActiveColumnValue(
             : null;
 
     case 'subscriptions.plan_interval': {
-        const interval = mostRelevantSubscription(member.subscriptions)?.plan?.interval;
+        const interval = member.current_subscription?.plan?.interval;
         if (!interval) {
             return null;
         }
@@ -167,7 +122,7 @@ export function getActiveColumnValue(
     }
 
     case 'subscriptions.status': {
-        const status = mostRelevantSubscription(member.subscriptions)?.status;
+        const status = member.current_subscription?.status;
         if (!status) {
             return null;
         }
@@ -181,13 +136,13 @@ export function getActiveColumnValue(
 
     case 'subscriptions.start_date':
         return formatDateColumn(
-            mostRelevantSubscription(member.subscriptions)?.start_date,
+            member.current_subscription?.start_date,
             timezone
         );
 
     case 'subscriptions.current_period_end':
         return formatDateColumn(
-            mostRelevantSubscription(member.subscriptions)?.current_period_end,
+            member.current_subscription?.current_period_end,
             timezone
         );
 

@@ -8,7 +8,7 @@ import {STATS_LABEL_MAPPINGS} from '@src/utils/constants';
 
 countries.registerLocale(enLocale);
 const getCountryName = (label: string) => {
-    return STATS_LABEL_MAPPINGS[label as keyof typeof STATS_LABEL_MAPPINGS] || countries.getName(label, 'en') || 'Unknown';
+    return STATS_LABEL_MAPPINGS[label as keyof typeof STATS_LABEL_MAPPINGS] || countries.getName(label, 'en', {select: 'alias'}) || 'Unknown';
 };
 
 interface ProcessedLocationData {
@@ -125,8 +125,8 @@ const Locations:React.FC<LocationsProps> = ({data, isLoading, onLocationClick}) 
                                 <SheetTrigger asChild>
                                     <Button variant='outline'>View all <LucideIcon.TableOfContents /></Button>
                                 </SheetTrigger>
-                                <SheetContent className='overflow-y-auto pt-0 sm:max-w-[600px]'>
-                                    <SheetHeader className='sticky top-0 z-40 -mx-6 bg-background/60 p-6 backdrop-blur'>
+                                <SheetContent className='overflow-y-auto pt-0 sm:max-w-[420px]'>
+                                    <SheetHeader className='sticky top-0 z-40 -mx-6 bg-surface-elevated/60 p-6 backdrop-blur'>
                                         <SheetTitle>Top locations</SheetTitle>
                                         <SheetDescription>Where are the readers of this post</SheetDescription>
                                     </SheetHeader>

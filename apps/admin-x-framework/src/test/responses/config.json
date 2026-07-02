@@ -2,7 +2,7 @@
     "config": {
         "version": "5.53.3",
         "environment": "development",
-        "database": "sqlite3",
+        "database": "better-sqlite3",
         "mail": "SMTP",
         "useGravatar": true,
         "labs": {},
@@ -13,6 +13,10 @@
         "emailAnalytics": true,
         "tenor": {
             "googleApiKey": null,
+            "contentFilter": "off"
+        },
+        "klipy": {
+            "apiKey": null,
             "contentFilter": "off"
         },
         "editor": {

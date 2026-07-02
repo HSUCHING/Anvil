@@ -59,7 +59,7 @@ const LatestPost: React.FC<LatestPostProps> = ({
     const shouldGoToEditor = postDestination.startsWith('/editor/');
 
     return (
-        <Card className='group/card bg-gradient-to-tr from-muted/40 to-muted/0 to-50%' data-testid='latest-post'>
+        <Card className='group/card' data-testid='latest-post'>
             <CardHeader>
                 <CardTitle className='flex items-baseline justify-between leading-snug font-medium text-muted-foreground'>
                     Latest post performance
@@ -78,7 +78,7 @@ const LatestPost: React.FC<LatestPostProps> = ({
                                 <Skeleton className='w-1/2' />
                             </div>
                         </div>
-                        <div className='flex flex-col items-stretch gap-2 px-6 text-sm'>
+                        <div className='flex flex-col items-stretch gap-2 px-6'>
                             <div className='grid grid-cols-2 gap-5'>
                                 <div>
                                     <Skeleton className='w-3/4' />
@@ -109,14 +109,14 @@ const LatestPost: React.FC<LatestPostProps> = ({
                                     }}></div>
                             }
                             <div className='flex grow flex-col items-start justify-center self-stretch'>
-                                <div className='text-lg leading-tighter font-semibold tracking-tight hover:cursor-pointer hover:opacity-75' onClick={() => {
+                                <div className='text-md leading-tighter font-semibold tracking-tight hover:cursor-pointer hover:opacity-75' onClick={() => {
                                     if (!isLoading && latestPostStats) {
                                         navigate(postDestination, {crossApp: true});
                                     }
                                 }}>
                                     {latestPostStats.title}
                                 </div>
-                                <div className='mt-0.5 text-sm text-muted-foreground'>
+                                <div className='mt-1 text-muted-foreground'>
                                     {latestPostStats.authors && latestPostStats.authors.length > 0 && (
                                         <div>
                                             By {latestPostStats.authors.map(author => author.name).join(', ')} &ndash; {formatDisplayDate(latestPostStats.published_at, siteTimezone)}
@@ -169,7 +169,7 @@ const LatestPost: React.FC<LatestPostProps> = ({
                             </div>
                         </div>
 
-                        <div className='-ml-4 flex w-full flex-col items-stretch gap-2 pr-6 text-sm xl:h-full xl:max-w-none'>
+                        <div className='-ml-4 flex w-full flex-col items-stretch gap-2 pr-6 xl:h-full xl:max-w-none'>
                             <div className='grid grid-cols-2 gap-6 pl-10 lg:border-l xl:h-full'>
                                 {/* Web metrics - only for published posts */}
                                 {metricsToShow.showWebMetrics && webAnalytics &&
@@ -195,7 +195,7 @@ const LatestPost: React.FC<LatestPostProps> = ({
                                             metricClassName,
 
                                             // Member metric is moved to the 2nd row in the grid if the post is email only or if web analytics is turned off, otherwise leave as is
-                                            (metricsToShow.showEmailMetrics && (!metricsToShow.showWebMetrics || !webAnalytics)) && 'row-[2/3] col-[1/2]'
+                                            (metricsToShow.showEmailMetrics && (!metricsToShow.showWebMetrics || !webAnalytics)) && 'col-[1/2] row-[2/3]'
                                         )
                                     } data-testid='latest-post-members' onClick={() => {
                                         navigate(`/posts/analytics/${latestPostStats.id}/growth`, {crossApp: true});

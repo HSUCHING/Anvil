@@ -1,4 +1,3 @@
-// NOTE: this has been copy-pasted into apps/posts/src/views/Automations/components/email-design/color-picker-field.tsx because we need to support the email design modal in both the settings app and the posts app until Automations GAs
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {ColorPicker} from '@tryghost/shade/patterns';
 import {Popover, PopoverContent, PopoverTrigger} from '@tryghost/shade/components';
@@ -133,7 +132,7 @@ const ColorPickerField: React.FC<ColorPickerFieldProps> = ({title, value, onChan
                                         <button
                                             key={swatch.title}
                                             aria-label={swatch.title}
-                                            className={`relative flex h-5 w-5 shrink-0 cursor-pointer items-center overflow-hidden rounded-full border border-grey-300 dark:border-grey-800 ${isSelected ? 'outline-2 outline-green' : ''}`}
+                                            className={`relative flex size-5 shrink-0 cursor-pointer items-center overflow-hidden rounded-full border border-grey-300 dark:border-grey-800 ${isSelected ? 'outline-2 outline-green' : ''}`}
                                             style={{backgroundColor: swatch.hex}}
                                             title={swatch.title}
                                             type="button"

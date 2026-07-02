@@ -159,22 +159,9 @@ describe('useMemberFilterFields', () => {
         });
     });
 
-    it('excludes the gift status option by default', () => {
+    it('includes the gift status option', () => {
         const {result} = renderHook(() => useMemberFilterFields({
             paidMembersEnabled: true,
-            siteTimezone: 'UTC'
-        }));
-
-        const subscriptionFields = result.current.find(group => group.group === 'Subscription')?.fields ?? [];
-        const statusField = subscriptionFields.find(field => field.key === 'status');
-
-        expect(statusField?.options?.map(o => o.value)).toEqual(['paid', 'free', 'comped']);
-    });
-
-    it('includes the gift status option when giftSubscriptionsEnabled is true', () => {
-        const {result} = renderHook(() => useMemberFilterFields({
-            paidMembersEnabled: true,
-            giftSubscriptionsEnabled: true,
             siteTimezone: 'UTC'
         }));
 
@@ -182,6 +169,60 @@ describe('useMemberFilterFields', () => {
         const statusField = subscriptionFields.find(field => field.key === 'status');
 
         expect(statusField?.options?.map(o => o.value)).toEqual(['paid', 'free', 'comped', 'gift']);
+    });
+
+    it('includes the membership tier filter when multiple paid tiers are available', () => {
+        const {result} = renderHook(() => useMemberFilterFields({
+            paidMembersEnabled: true,
+            hasMultipleTiers: true,
+            tierValueSource,
+            siteTimezone: 'UTC'
+        }));
+
+        const subscriptionFields = result.current.find(group => group.group === 'Subscription')?.fields ?? [];
+        const tierField = subscriptionFields.find(field => field.key === 'tier_id');
+
+        expect(subscriptionFields.map(field => field.key)).toContain('tier_id');
+        expect(tierField).toMatchObject({
+            valueSource: tierValueSource
+        });
+    });
+
+    it('includes the multiple active subscriptions filter after member status when affected members exist', () => {
+        const {result} = renderHook(() => useMemberFilterFields({
+            paidMembersEnabled: true,
+            multipleActiveSubscriptionsCount: 2,
+            siteTimezone: 'UTC'
+        }));
+
+        const subscriptionFields = result.current.find(group => group.group === 'Subscription')?.fields ?? [];
+        const fieldKeys = subscriptionFields.map(field => field.key);
+
+        expect(fieldKeys.indexOf('count.active_stripe_customers')).toBe(fieldKeys.indexOf('status') + 1);
+
+        const multipleSubscriptionsField = subscriptionFields.find(field => field.key === 'count.active_stripe_customers');
+
+        expect(multipleSubscriptionsField).toMatchObject({
+            label: 'Multiple active subscriptions',
+            type: 'select',
+            hideOperatorSelect: true,
+            options: [
+                {value: 'true', label: 'Yes'},
+                {value: 'false', label: 'No'}
+            ]
+        });
+    });
+
+    it('omits the multiple active subscriptions filter when no affected members exist', () => {
+        const {result} = renderHook(() => useMemberFilterFields({
+            paidMembersEnabled: true,
+            multipleActiveSubscriptionsCount: 0,
+            siteTimezone: 'UTC'
+        }));
+
+        const subscriptionFields = result.current.find(group => group.group === 'Subscription')?.fields ?? [];
+
+        expect(subscriptionFields.map(field => field.key)).not.toContain('count.active_stripe_customers');
     });
 
     it('hydrates grouped retention offers on the offer field', () => {

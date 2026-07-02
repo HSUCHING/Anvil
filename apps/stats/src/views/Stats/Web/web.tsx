@@ -1,6 +1,6 @@
 import DateRangeSelect from '../components/date-range-select';
 import LocationsCard from '../Locations/components/locations-card';
-import React, {useCallback, useMemo} from 'react';
+import React, {useCallback, useMemo, useRef} from 'react';
 import SourcesCard from './components/sources-card';
 import StatsFilter from '../components/stats-filter';
 import StatsHeader from '../layout/stats-header';
@@ -13,7 +13,7 @@ import {KpiMetric} from '@src/types/kpi';
 import {Navigate, useAppContext, useTinybirdQuery} from '@tryghost/admin-x-framework';
 import {STATS_DEFAULT_SOURCE_ICON_URL} from '@src/utils/constants';
 import {createFilter} from '@tryghost/shade/patterns';
-import {formatDuration, formatNumber, formatPercentage} from '@tryghost/shade/utils';
+import {formatDuration, formatNumber, formatPercentage, getScrollParent} from '@tryghost/shade/utils';
 import {formatQueryDate, getRangeDates} from '@tryghost/shade/app';
 import {getAudienceFromFilterValues, getAudienceQueryParam} from '@src/utils/audience';
 import {useFilterParams} from '@hooks/use-filter-params';
@@ -57,6 +57,9 @@ const Web: React.FC = () => {
     const {statsConfig, isLoading: isConfigLoading, range, data} = useGlobalData();
     const {startDate, endDate, timezone} = getRangeDates(range);
     const {appSettings} = useAppContext();
+    const webAnalyticsEnabled = appSettings?.analytics?.webAnalytics === true;
+
+    const containerRef = useRef<HTMLDivElement>(null);
 
     // Use URL-synced filter state for bookmarking and sharing
     const {filters: analyticsFilters, setFilters: setAnalyticsFilters} = useFilterParams();
@@ -73,7 +76,7 @@ const Web: React.FC = () => {
 
     // Scroll to top of the scrollable container
     const scrollToTop = useCallback(() => {
-        const scrollContainer = document.querySelector('.overflow-y-scroll');
+        const scrollContainer = getScrollParent(containerRef.current);
         if (scrollContainer) {
             scrollContainer.scrollTo({top: 0, behavior: 'smooth'});
         }
@@ -176,7 +179,7 @@ const Web: React.FC = () => {
     // Calculate combined loading state
     const isPageLoading = isConfigLoading;
 
-    if (!appSettings?.analytics.webAnalytics) {
+    if (!webAnalyticsEnabled) {
         return (
             <Navigate to='/' />
         );
@@ -186,7 +189,7 @@ const Web: React.FC = () => {
     const hasFilters = analyticsFilters.length > 0;
 
     return (
-        <StatsLayout>
+        <StatsLayout ref={containerRef}>
             <StatsHeader>
                 {hasFilters &&
                 <NavbarActions>

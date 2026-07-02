@@ -112,7 +112,7 @@ export function MappingStep({
                                             currentlyDisplayedData.map(row => (
                                                 <TableRow key={row.key} className={cn(!row.mapTo && 'bg-muted')}>
                                                     <TableCell className="text-sm font-medium break-all">{row.key}</TableCell>
-                                                    <TableCell className={cn('break-all text-sm', !row.value && 'text-muted-foreground')}>
+                                                    <TableCell className={cn('text-sm break-all', !row.value && 'text-muted-foreground')}>
                                                         {row.value || '\u00A0'}
                                                     </TableCell>
                                                     <TableCell>
@@ -163,9 +163,7 @@ export function MappingStep({
                         <div className="mt-5">
                             <label className="mb-1 block text-sm font-semibold">Label these members</label>
                             <LabelPicker
-                                canCreateFromSearch={labelPicker.canCreateFromSearch}
                                 isCreating={labelPicker.isCreating}
-                                isDuplicateName={labelPicker.isDuplicateName}
                                 labels={labelPicker.labels}
                                 optionSource={labelPicker.optionSource}
                                 resolvedSelectedLabels={labelPicker.resolvedSelectedLabels}

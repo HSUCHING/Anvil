@@ -91,8 +91,12 @@ const Comment = ghostBookshelf.Model.extend({
     },
 
     replies() {
+        // Tie-break on id so created_at ties (replies inserted in a tight loop
+        // share a millisecond) don't flip ordering when the planner picks
+        // between the created_at index and the FK index on parent_id.
         return this.hasMany('Comment', 'parent_id', 'id')
-            .query('orderBy', 'created_at', 'ASC');
+            .query('orderBy', 'created_at', 'ASC')
+            .query('orderBy', 'id', 'ASC');
     },
 
     // Called by our filtered-collection bookshelf plugin
@@ -170,9 +174,11 @@ const Comment = ghostBookshelf.Model.extend({
     },
 
     onCreated: function onCreated(model, options) {
-        ghostBookshelf.Model.prototype.onCreated.apply(this, arguments);
+        const result = ghostBookshelf.Model.prototype.onCreated.apply(this, arguments);
 
         model.emitChange('added', options);
+
+        return result;
     },
 
     enforcedFilters: function enforcedFilters(options) {
